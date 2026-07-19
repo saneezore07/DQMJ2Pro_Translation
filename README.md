@@ -85,3 +85,11 @@ Newly added:
 - performpatch.py: Automatically applies the necessary patches + swaps the gender icons for polarity icons, then builds the translated files for you. For people who only want to play the translated game.
 
 </details>
+
+## Android support
+
+Android support is being developed as a separate Kivy prototype under:
+
+`Database/GUI_Patcher/Android/`
+
+The desktop Tkinter GUI remains the supported GUI for Windows/Linux. The Android version is currently experimental and still needs Android-compatible patching tool integration.
