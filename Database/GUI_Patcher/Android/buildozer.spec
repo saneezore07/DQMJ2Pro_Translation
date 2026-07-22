@@ -17,7 +17,7 @@ fullscreen = 0
 
 android.permissions = READ_EXTERNAL_STORAGE,WRITE_EXTERNAL_STORAGE
 android.api = 35
-android.build_tools_version = 35.0.0
+android.build_tools = 35.0.0
 android.minapi = 23
 android.archs = arm64-v8a
 
