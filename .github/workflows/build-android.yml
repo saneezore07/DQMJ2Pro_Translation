@@ -63,40 +63,28 @@ jobs:
 
       - name: Build Android debug APK
         working-directory: Database/GUI_Patcher/Android
-        env:
-          ACLOCAL_PATH: /usr/share/aclocal
         run: |
-          mkdir -p "$HOME/.buildozer/android/platform/android-sdk/tools/bin"
-          ln -sf "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" \
-            "$HOME/.buildozer/android/platform/android-sdk/tools/bin/sdkmanager"
-          ln -sf "$ANDROID_HOME/cmdline-tools/latest/bin/avdmanager" \
-            "$HOME/.buildozer/android/platform/android-sdk/tools/bin/avdmanager"
+          APP_VERSION="${GITHUB_REF_NAME#android-v}"
 
-          set +e
-          export CFLAGS="${CFLAGS:-} -Wno-error=implicit-function-declaration"
-          export CPPFLAGS="${CPPFLAGS:-} -Wno-error=implicit-function-declaration"
+          python -m pythonforandroid.toolchain apk \
+            --private "$PWD" \
+            --package org.dqmj2protranslation.dqmj2patcher \
+            --name DQMJ2Patcher \
+            --version "$APP_VERSION" \
+            --bootstrap sdl2 \
+            --requirements python3,kivy,pillow \
+            --arch arm64-v8a \
+            --sdk-dir "$ANDROID_HOME" \
+            --ndk-dir "$ANDROID_NDK_ROOT" \
+            --android-api 35 \
+            --ndk-api 23 \
+            --permission READ_EXTERNAL_STORAGE \
+            --permission WRITE_EXTERNAL_STORAGE \
+            --debug \
+            --color always 2>&1 | tee p4a-apk-build.log
 
-          buildozer -v android debug 2>&1 | tee buildozer-build.log
-          code="${PIPESTATUS[0]}"
-
-          if grep -q "remote_debugging.h.*preadv\|remote_debugging.c.*pwritev\|implicit-function-declaration" buildozer-build.log; then
-            echo "Retrying after patching Python remote debugging preadv/pwritev probes..."
-            for f in $(find .buildozer/android/platform/build-arm64-v8a -path '*python3*' \( -name 'remote_debugging.h' -o -name 'remote_debugging.c' \)); do
-              echo "patching $f"
-              sed -i 's/preadv/python_preadv_disabled/g; s/pwritev/python_pwritev_disabled/g' "$f"
-            done
-            buildozer -v android debug 2>&1 | tee -a buildozer-build.log
-            code="${PIPESTATUS[0]}"
-          fi
-          code="${PIPESTATUS[0]}"
-
-          echo "===== LAST 220 BUILDOZER LOG LINES ====="
-          tail -220 buildozer-build.log
-
-          echo "===== ERROR/WARNING SEARCH ====="
-          grep -nEi "error:|fatal:|failed|exception|traceback|no such file|not found" buildozer-build.log | tail -80 || true
-
-          exit "$code"
+          echo "APK search after p4a:"
+          find . -name "*.apk" -type f -print
 
       - name: Package release assets
         run: |
