@@ -107,9 +107,25 @@ jobs:
           find Database/GUI_Patcher/Android -name "*.apk" -type f -print
 
           APK="$(find Database/GUI_Patcher/Android -name "*.apk" -type f | head -n 1)"
+
+          if [ -z "$APK" ]; then
+            echo "No APK found after buildozer; trying Gradle assembleDebug directly..."
+            DIST="$(find Database/GUI_Patcher/Android/.buildozer/android/platform/build-arm64-v8a/dists -maxdepth 2 -name gradlew -type f | head -n 1)"
+            if [ -n "$DIST" ]; then
+              DIST_DIR="$(dirname "$DIST")"
+              echo "Gradle dist: $DIST_DIR"
+              chmod +x "$DIST"
+              (cd "$DIST_DIR" && ./gradlew assembleDebug --stacktrace)
+            fi
+          fi
+
+          echo "Searching for APK outputs after Gradle fallback..."
+          find Database/GUI_Patcher/Android -name "*.apk" -type f -print
+
+          APK="$(find Database/GUI_Patcher/Android -name "*.apk" -type f | head -n 1)"
           if [ -z "$APK" ]; then
             echo "No APK found"
-            find Database/GUI_Patcher/Android -maxdepth 6 -type f | sort | tail -200
+            find Database/GUI_Patcher/Android -type f | sort | tail -300
             exit 1
           fi
 
