@@ -1,0 +1,44 @@
+name: Build Android Prototype
+
+permissions:
+  contents: write
+
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - "android-v*"
+
+jobs:
+  android:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check Android prototype files
+        run: |
+          test -f Database/GUI_Patcher/Android/main.py
+          test -f Database/GUI_Patcher/Android/buildozer.spec
+          test -f Database/GUI_Patcher/Android/requirements.txt
+
+      - name: Package Android prototype source
+        run: |
+          VERSION="${GITHUB_REF_NAME}"
+          mkdir -p release-assets
+          zip -r "release-assets/DQMJ2Patcher-${VERSION}-android-prototype-source.zip" \
+            Database/GUI_Patcher/Android \
+            Database/GUI_Patcher/GUI \
+            Database \
+            Pro_Tools \
+            Translation \
+            README.md \
+            -x "*.git*" "*__pycache__*" "*.pyc"
+
+      - name: Publish Android prototype release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref_name }}
+          name: DQMJ2P Android Prototype ${{ github.ref_name }}
+          prerelease: true
+          files: release-assets/*
