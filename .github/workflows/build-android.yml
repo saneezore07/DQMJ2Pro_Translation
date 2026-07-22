@@ -64,7 +64,18 @@ jobs:
             "$HOME/.buildozer/android/platform/android-sdk/tools/bin/sdkmanager"
           ln -sf "$ANDROID_HOME/cmdline-tools/latest/bin/avdmanager" \
             "$HOME/.buildozer/android/platform/android-sdk/tools/bin/avdmanager"
-          buildozer android debug
+
+          set +e
+          buildozer -v android debug 2>&1 | tee buildozer-build.log
+          code="${PIPESTATUS[0]}"
+
+          echo "===== LAST 220 BUILDOZER LOG LINES ====="
+          tail -220 buildozer-build.log
+
+          echo "===== ERROR/WARNING SEARCH ====="
+          grep -nEi "error:|fatal:|failed|exception|traceback|no such file|not found" buildozer-build.log | tail -80 || true
+
+          exit "$code"
 
       - name: Package release assets
         run: |
