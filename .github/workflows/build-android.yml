@@ -30,7 +30,7 @@ jobs:
             zlib1g-dev libncurses5-dev libncursesw5-dev libtinfo6 \
             cmake libffi-dev libssl-dev
           python -m pip install --upgrade pip
-          python -m pip install "buildozer==1.5.0" "cython<3"
+          python -m pip install "buildozer==1.5.0" "python-for-android==2024.1.21" "cython<3"
 
       - name: Pre-accept Android SDK licenses
         run: |

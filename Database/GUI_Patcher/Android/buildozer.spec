@@ -10,7 +10,7 @@ source.exclude_dirs = .git,.github,GUI_WORK,ANDROID_WORK,__pycache__,build,dist
 
 version = 1.0.1
 
-requirements = python3==3.11.6,kivy,pillow
+requirements = python3,kivy,pillow
 
 orientation = portrait
 fullscreen = 0
@@ -26,3 +26,6 @@ android.archs = arm64-v8a
 
 log_level = 2
 warn_on_root = 1
+
+# Use installed python-for-android instead of cloning current master.
+p4a.source_dir =
