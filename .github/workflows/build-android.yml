@@ -59,6 +59,11 @@ jobs:
       - name: Build Android debug APK
         working-directory: Database/GUI_Patcher/Android
         run: |
+          mkdir -p "$HOME/.buildozer/android/platform/android-sdk/tools/bin"
+          ln -sf "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" \
+            "$HOME/.buildozer/android/platform/android-sdk/tools/bin/sdkmanager"
+          ln -sf "$ANDROID_HOME/cmdline-tools/latest/bin/avdmanager" \
+            "$HOME/.buildozer/android/platform/android-sdk/tools/bin/avdmanager"
           buildozer android debug
 
       - name: Package release assets
