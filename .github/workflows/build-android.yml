@@ -76,18 +76,18 @@ jobs:
           export CFLAGS="${CFLAGS:-} -Wno-error=implicit-function-declaration"
           export CPPFLAGS="${CPPFLAGS:-} -Wno-error=implicit-function-declaration"
 
-          # Python 3.11 headers still expose preadv/pwritev probes that fail with newer Android clang defaults.
-          python - <<'PY2'
-          from pathlib import Path
-          for h in Path(".buildozer/android/platform/build-arm64-v8a").rglob("remote_debugging.h"):
-              text = h.read_text()
-              text = text.replace("preadv", "python_preadv_disabled")
-              text = text.replace("pwritev", "python_pwritev_disabled")
-              h.write_text(text)
-              print("patched", h)
-          PY2
-
           buildozer -v android debug 2>&1 | tee buildozer-build.log
+          code="${PIPESTATUS[0]}"
+
+          if grep -q "remote_debugging.h.*preadv\|remote_debugging.c.*pwritev\|implicit-function-declaration" buildozer-build.log; then
+            echo "Retrying after patching Python remote debugging preadv/pwritev probes..."
+            for f in $(find .buildozer/android/platform/build-arm64-v8a -path '*python3*' \( -name 'remote_debugging.h' -o -name 'remote_debugging.c' \)); do
+              echo "patching $f"
+              sed -i 's/preadv/python_preadv_disabled/g; s/pwritev/python_pwritev_disabled/g' "$f"
+            done
+            buildozer -v android debug 2>&1 | tee -a buildozer-build.log
+            code="${PIPESTATUS[0]}"
+          fi
           code="${PIPESTATUS[0]}"
 
           echo "===== LAST 220 BUILDOZER LOG LINES ====="
