@@ -103,8 +103,18 @@ jobs:
           VERSION="${GITHUB_REF_NAME}"
           mkdir -p release-assets
 
-          cp Database/GUI_Patcher/Android/bin/*.apk \
-            "release-assets/DQMJ2Patcher-${VERSION}-android-debug.apk"
+          echo "Searching for APK outputs..."
+          find Database/GUI_Patcher/Android -name "*.apk" -type f -print
+
+          APK="$(find Database/GUI_Patcher/Android -name "*.apk" -type f | head -n 1)"
+          if [ -z "$APK" ]; then
+            echo "No APK found"
+            find Database/GUI_Patcher/Android -maxdepth 6 -type f | sort | tail -200
+            exit 1
+          fi
+
+          echo "Using APK: $APK"
+          cp "$APK" "release-assets/DQMJ2Patcher-${VERSION}-android-debug.apk"
 
           zip -r "release-assets/DQMJ2Patcher-${VERSION}-android-prototype-source.zip" \
             Database/GUI_Patcher/Android \
@@ -113,7 +123,7 @@ jobs:
             Pro_Tools \
             Translation \
             README.md \
-            -x "*.git*" "*__pycache__*" "*.pyc"
+            -x "*.git*" "*__pycache__*" "*.pyc" "*.apk"
 
       - name: Publish Android prototype release
         env:
