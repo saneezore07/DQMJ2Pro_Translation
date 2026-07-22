@@ -110,12 +110,18 @@ jobs:
 
           if [ -z "$APK" ]; then
             echo "No APK found after buildozer; trying Gradle assembleDebug directly..."
-            DIST="$(find Database/GUI_Patcher/Android/.buildozer/android/platform/build-arm64-v8a/dists -maxdepth 2 -name gradlew -type f | head -n 1)"
+            echo "Possible Gradle wrappers:"
+            find Database/GUI_Patcher/Android/.buildozer -name gradlew -type f -print || true
+
+            DIST="$(find Database/GUI_Patcher/Android/.buildozer -name gradlew -type f | head -n 1)"
             if [ -n "$DIST" ]; then
               DIST_DIR="$(dirname "$DIST")"
               echo "Gradle dist: $DIST_DIR"
               chmod +x "$DIST"
               (cd "$DIST_DIR" && ./gradlew assembleDebug --stacktrace)
+            else
+              echo "No Gradle wrapper found. Listing dists/build dirs:"
+              find Database/GUI_Patcher/Android/.buildozer/android/platform -maxdepth 8 -type d | sort | grep -Ei "dist|build|gradle|apk|dqmj" || true
             fi
           fi
 
