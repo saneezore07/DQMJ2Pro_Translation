@@ -33,12 +33,23 @@ jobs:
           from pathlib import Path
           p = Path("Database/GUI_Patcher/Android/buildozer.spec")
           s = p.read_text()
-          s = s.replace("requirements = python3,kivy", "requirements = python3,kivy,pillow")
+          s = s.replace("requirements = python3,kivy,pillow", "requirements = python3,kivy,pillow,pillow")
           p.write_text(s)
           PY
 
+      - name: Accept Android SDK licenses
+        run: |
+          yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --licenses
+          "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" \
+            "platforms;android-35" \
+            "build-tools;35.0.0" \
+            "platform-tools"
+
       - name: Build Android debug APK
         working-directory: Database/GUI_Patcher/Android
+        env:
+          ANDROID_HOME: ${{ env.ANDROID_HOME }}
+          ANDROID_SDK_ROOT: ${{ env.ANDROID_HOME }}
         run: |
           buildozer android debug
 
