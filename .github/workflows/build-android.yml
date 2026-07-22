@@ -119,7 +119,7 @@ jobs:
               echo "Gradle dist: $DIST_DIR"
               chmod +x "$DIST"
               (cd "$DIST_DIR" && ./gradlew tasks --all || true)
-              (cd "$DIST_DIR" && ./gradlew packageDebug --stacktrace || ./gradlew assembleDebug --stacktrace || true)
+              (cd "$DIST_DIR" && ./gradlew clean assembleDebug --stacktrace --info 2>&1 | tee gradle-debug.log)
             else
               echo "No Gradle wrapper found. Listing dists/build dirs:"
               find Database/GUI_Patcher/Android/.buildozer/android/platform -maxdepth 8 -type d | sort | grep -Ei "dist|build|gradle|apk|dqmj" || true
@@ -131,12 +131,13 @@ jobs:
 
           APK="$(find Database/GUI_Patcher/Android -name "*.apk" -type f | head -n 1)"
           if [ -z "$APK" ]; then
-            echo "No APK found; publishing source-only artifact for this prototype tag."
-            printf 'Android APK was not produced by Buildozer on this run. Source bundle only.\n' > release-assets/ANDROID_APK_NOT_BUILT.txt
-          else
-            echo "Using APK: $APK"
-            cp "$APK" "release-assets/DQMJ2Patcher-${VERSION}-android-debug.apk"
+            echo "No APK found; failing because APK output is required."
+            find Database/GUI_Patcher/Android/.buildozer -type f | sort | grep -Ei 'gradle|manifest|apk|aab|log|txt|properties' | tail -300 || true
+            exit 1
           fi
+
+          echo "Using APK: $APK"
+          cp "$APK" "release-assets/DQMJ2Patcher-${VERSION}-android-debug.apk"
 
           zip -r "release-assets/DQMJ2Patcher-${VERSION}-android-prototype-source.zip" \
             Database/GUI_Patcher/Android \
