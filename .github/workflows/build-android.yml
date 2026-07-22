@@ -27,27 +27,18 @@ jobs:
           python -m pip install --upgrade pip
           python -m pip install buildozer cython
 
-      - name: Ensure Android requirements
-        run: |
-          python - <<'PY'
-          from pathlib import Path
-          p = Path("Database/GUI_Patcher/Android/buildozer.spec")
-          s = p.read_text()
-          s = s.replace("requirements = python3,kivy,pillow", "requirements = python3,kivy,pillow,pillow")
-          p.write_text(s)
-          PY
-
       - name: Pre-accept Android SDK licenses
         run: |
           mkdir -p "$HOME/.buildozer/android/platform/android-sdk/licenses"
-          cat > "$HOME/.buildozer/android/platform/android-sdk/licenses/android-sdk-license" <<'LIC'
-8933bad161af4178b1185d1a37fbf41ea5269c55d
-d56f5187479451eabf01fb78af6dfcb131a6481e
-24333f8a63b6825ea9c5514f83c2829b004d1fee
-LIC
+          printf '%s\n' \
+            '8933bad161af4178b1185d1a37fbf41ea5269c55d' \
+            'd56f5187479451eabf01fb78af6dfcb131a6481e' \
+            '24333f8a63b6825ea9c5514f83c2829b004d1fee' \
+            > "$HOME/.buildozer/android/platform/android-sdk/licenses/android-sdk-license"
 
           mkdir -p "$ANDROID_HOME/licenses"
-          cp "$HOME/.buildozer/android/platform/android-sdk/licenses/android-sdk-license" "$ANDROID_HOME/licenses/android-sdk-license"
+          cp "$HOME/.buildozer/android/platform/android-sdk/licenses/android-sdk-license" \
+            "$ANDROID_HOME/licenses/android-sdk-license"
 
           yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --licenses || true
           "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" \
@@ -55,11 +46,18 @@ LIC
             "build-tools;37.0.0" \
             "platform-tools"
 
+      - name: Ensure Android requirements
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p = Path("Database/GUI_Patcher/Android/buildozer.spec")
+          s = p.read_text()
+          s = s.replace("requirements = python3,kivy", "requirements = python3,kivy,pillow")
+          p.write_text(s)
+          PY
+
       - name: Build Android debug APK
         working-directory: Database/GUI_Patcher/Android
-        env:
-          ANDROID_HOME: ${{ env.ANDROID_HOME }}
-          ANDROID_SDK_ROOT: ${{ env.ANDROID_HOME }}
         run: |
           buildozer android debug
 
