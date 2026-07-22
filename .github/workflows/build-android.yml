@@ -16,16 +16,40 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Check Android prototype files
+      - name: Install build dependencies
         run: |
-          test -f Database/GUI_Patcher/Android/main.py
-          test -f Database/GUI_Patcher/Android/buildozer.spec
-          test -f Database/GUI_Patcher/Android/requirements.txt
+          sudo apt-get update
+          sudo apt-get install -y \
+            zip unzip openjdk-17-jdk \
+            autoconf automake libtool pkg-config \
+            zlib1g-dev libncurses5-dev libncursesw5-dev libtinfo6 \
+            cmake libffi-dev libssl-dev
+          python -m pip install --upgrade pip
+          python -m pip install buildozer cython
 
-      - name: Package Android prototype source
+      - name: Ensure Android requirements
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p = Path("Database/GUI_Patcher/Android/buildozer.spec")
+          s = p.read_text()
+          s = s.replace("requirements = python3,kivy", "requirements = python3,kivy,pillow")
+          p.write_text(s)
+          PY
+
+      - name: Build Android debug APK
+        working-directory: Database/GUI_Patcher/Android
+        run: |
+          buildozer android debug
+
+      - name: Package release assets
         run: |
           VERSION="${GITHUB_REF_NAME}"
           mkdir -p release-assets
+
+          cp Database/GUI_Patcher/Android/bin/*.apk \
+            "release-assets/DQMJ2Patcher-${VERSION}-android-debug.apk"
+
           zip -r "release-assets/DQMJ2Patcher-${VERSION}-android-prototype-source.zip" \
             Database/GUI_Patcher/Android \
             Database/GUI_Patcher/GUI \
@@ -46,6 +70,6 @@ jobs:
           gh release create "$TAG" \
             release-assets/* \
             --title "DQMJ2P Android Prototype $TAG" \
-            --notes "Experimental Android prototype source release." \
+            --notes "Experimental Android prototype APK for testing." \
             --prerelease \
             --target "$GITHUB_SHA"
