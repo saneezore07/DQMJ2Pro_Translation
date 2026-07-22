@@ -16,7 +16,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Set up Python 3.11
+      - name: Set up Python 3.11.6
         uses: actions/setup-python@v5
         with:
           python-version: "3.11.6"
@@ -51,17 +51,7 @@ jobs:
             "build-tools;37.0.0" \
             "platform-tools"
 
-      - name: Ensure Android requirements
-        run: |
-          python - <<'PY'
-          from pathlib import Path
-          p = Path("Database/GUI_Patcher/Android/buildozer.spec")
-          s = p.read_text()
-          s = s.replace("requirements = python3,kivy", "requirements = python3,kivy,pillow")
-          p.write_text(s)
-          PY
-
-      - name: Build Android debug APK
+      - name: Build Android debug APK directly with p4a
         working-directory: Database/GUI_Patcher/Android
         run: |
           APP_VERSION="${GITHUB_REF_NAME#android-v}"
@@ -84,43 +74,21 @@ jobs:
             --color always 2>&1 | tee p4a-apk-build.log
 
           echo "APK search after p4a:"
-          find . -name "*.apk" -type f -print
+          find "$GITHUB_WORKSPACE" "$HOME" -name "*.apk" -type f -print || true
 
       - name: Package release assets
         run: |
           VERSION="${GITHUB_REF_NAME}"
           mkdir -p release-assets
 
-          echo "Searching for APK outputs..."
-          find Database/GUI_Patcher/Android -name "*.apk" -type f -print
+          echo "Searching entire runner for APK outputs..."
+          find "$GITHUB_WORKSPACE" "$HOME" -name "*.apk" -type f -print || true
 
-          APK="$(find Database/GUI_Patcher/Android -name "*.apk" -type f | head -n 1)"
-
+          APK="$(find "$GITHUB_WORKSPACE" "$HOME" -name "*.apk" -type f | head -n 1)"
           if [ -z "$APK" ]; then
-            echo "No APK found after buildozer; trying Android Gradle Plugin assembleDebug tasks..."
-            echo "Possible Gradle wrappers:"
-            find Database/GUI_Patcher/Android/.buildozer -name gradlew -type f -print || true
-
-            DIST="$(find Database/GUI_Patcher/Android/.buildozer -name gradlew -type f | head -n 1)"
-            if [ -n "$DIST" ]; then
-              DIST_DIR="$(dirname "$DIST")"
-              echo "Gradle dist: $DIST_DIR"
-              chmod +x "$DIST"
-              (cd "$DIST_DIR" && ./gradlew tasks --all || true)
-              (cd "$DIST_DIR" && ./gradlew clean assembleDebug --stacktrace --info 2>&1 | tee gradle-debug.log)
-            else
-              echo "No Gradle wrapper found. Listing dists/build dirs:"
-              find Database/GUI_Patcher/Android/.buildozer/android/platform -maxdepth 8 -type d | sort | grep -Ei "dist|build|gradle|apk|dqmj" || true
-            fi
-          fi
-
-          echo "Searching for APK outputs after Gradle fallback..."
-          find Database/GUI_Patcher/Android -name "*.apk" -type f -print
-
-          APK="$(find Database/GUI_Patcher/Android -name "*.apk" -type f | head -n 1)"
-          if [ -z "$APK" ]; then
-            echo "No APK found; failing because APK output is required."
-            find Database/GUI_Patcher/Android/.buildozer -type f | sort | grep -Ei 'gradle|manifest|apk|aab|log|txt|properties' | tail -300 || true
+            echo "No APK found anywhere; failing because APK output is required."
+            find "$GITHUB_WORKSPACE" "$HOME" -maxdepth 8 -type d | grep -Ei 'buildozer|python-for-android|dist|dists|bin|apk|gradle|dqmj' | sort | tail -300 || true
+            find "$GITHUB_WORKSPACE" "$HOME" -name "*build*.log" -o -name "*.log" -o -name "gradlew" -o -name "build.gradle" | sort | tail -300 || true
             exit 1
           fi
 
