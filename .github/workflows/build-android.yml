@@ -21,7 +21,7 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y \
             zip unzip openjdk-17-jdk \
-            autoconf automake libtool pkg-config \
+            autoconf automake autoconf-archive libtool libtool-bin libltdl-dev m4 gettext pkg-config \
             zlib1g-dev libncurses5-dev libncursesw5-dev libtinfo6 \
             cmake libffi-dev libssl-dev
           python -m pip install --upgrade pip
@@ -58,6 +58,8 @@ jobs:
 
       - name: Build Android debug APK
         working-directory: Database/GUI_Patcher/Android
+        env:
+          ACLOCAL_PATH: /usr/share/aclocal
         run: |
           mkdir -p "$HOME/.buildozer/android/platform/android-sdk/tools/bin"
           ln -sf "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" \
