@@ -10,7 +10,7 @@ source.exclude_dirs = .git,.github,GUI_WORK,ANDROID_WORK,__pycache__,build,dist
 
 version = 1.0.1
 
-requirements = python3,kivy,pillow
+requirements = python3==3.11.6,kivy,pillow
 
 orientation = portrait
 fullscreen = 0
