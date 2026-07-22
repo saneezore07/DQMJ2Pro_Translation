@@ -36,9 +36,16 @@ jobs:
             -x "*.git*" "*__pycache__*" "*.pyc"
 
       - name: Publish Android prototype release
-        uses: softprops/action-gh-release@v2
-        with:
-          tag_name: ${{ github.ref_name }}
-          name: DQMJ2P Android Prototype ${{ github.ref_name }}
-          prerelease: true
-          files: release-assets/*
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          TAG="${GITHUB_REF_NAME}"
+
+          gh release delete "$TAG" --yes --cleanup-tag=false || true
+
+          gh release create "$TAG" \
+            release-assets/* \
+            --title "DQMJ2P Android Prototype $TAG" \
+            --notes "Experimental Android prototype source release." \
+            --prerelease \
+            --target "$GITHUB_SHA"
