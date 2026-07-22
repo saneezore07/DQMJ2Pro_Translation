@@ -10,7 +10,7 @@ source.exclude_dirs = .git,.github,GUI_WORK,ANDROID_WORK,__pycache__,build,dist
 
 version = 1.0.1
 
-requirements = python3,kivy,pillow
+requirements = python3==3.11.6,kivy,pillow
 
 orientation = portrait
 fullscreen = 0
@@ -19,6 +19,7 @@ android.permissions = READ_EXTERNAL_STORAGE,WRITE_EXTERNAL_STORAGE
 android.api = 35
 android.build_tools = 35.0.0
 android.minapi = 23
+android.ndk_api = 23
 android.archs = arm64-v8a
 
 [buildozer]
